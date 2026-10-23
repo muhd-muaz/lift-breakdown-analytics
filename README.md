@@ -66,6 +66,7 @@ src/build_html.py       model tables -> one self-contained HTML (data dictionary
 src/dashboard/          page template + vendored ECharts 5.5.1 (Apache-2.0)
 src/month_end_pdf.py    month-end pack
 src/monthly_report.py   What / Why / What now report
+tests/                  pytest sanity checks on the fake data and the built dashboard (run in CI)
 docs/                   screenshots
 ```
 

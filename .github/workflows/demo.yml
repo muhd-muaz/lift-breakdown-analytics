@@ -18,25 +18,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: pip install pandas
+      - run: pip install pandas pytest
       - name: Generate synthetic data
         run: python generate_fake_data.py
       - name: Build dashboard
         working-directory: src
         run: python build_html.py
-      - name: Check the page has data
-        run: test "$(stat -c %s 'Breakdown Dashboard.html')" -gt 1000000
+      - name: Tests
+        run: pytest -q tests
       - name: Collect site
         run: |
           mkdir -p _site/docs _site/month-end
           cp "Breakdown Dashboard.html" index.html _site/
           cp docs/*.png _site/docs/
           cp month-end/*.pdf _site/month-end/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: vars.DEPLOY_PAGES == 'true'
         with:
           path: _site
@@ -50,4 +50,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
