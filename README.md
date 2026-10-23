@@ -10,6 +10,8 @@ It turns raw ERP work orders and call-centre tickets into one offline HTML dashb
 > `generate_fake_data.py` from a seeded random generator. The production version runs on real company data that
 > is not published here.
 
+**[▶ Open the live demo dashboard](https://muhd-muaz.github.io/lift-breakdown-analytics/)** (runs in the browser, synthetic data)
+
 ![Overview](docs/overview.png)
 
 ## What it does
