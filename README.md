@@ -14,6 +14,38 @@ It turns raw ERP work orders and call-centre tickets into one offline HTML dashb
 
 ![Overview](docs/overview.png)
 
+## Why I built it
+
+**Before.** Breakdown figures lived in manual Excel files, and the team waited for a manager to refresh a Power
+Query report. Callbacks were counted in one total: there was no reliable split between real equipment failures
+and calls caused by misuse, power cuts or "no fault found".
+
+**After.** The whole pipeline runs by itself at 09:00 every weekday in about 5 minutes, and a fresh run can be
+started on demand. The dashboard rebuilds in about a minute, and each month-end PDF prints in seconds.
+
+**What changed.** For the first time the team sees *actual* breakdowns separately from non-actual calls. It also
+sees which zones are slow to attend or have the most repeat failures. Those are the two questions management
+asks first.
+
+**The hard part was the data, not the charts.** Engineers type work orders by hand, so fault codes are missing
+until a job is closed, ticket numbers are mistyped or left blank, and the same call shows up differently in the
+ERP and the call-centre system. The pipeline does three things about it:
+- It matches tickets across both systems, using the old job code and the new ticket number, and gets over 90% of
+  callbacks matched.
+- It predicts a provisional fault code from the engineer's remarks and labels it as predicted wherever it's counted.
+- It reports every data-quality gap on its own tab instead of hiding it.
+
+**Why not a BI tool?** No licence cost, full control over every rule, and it's easy to connect an AI model (the
+remarks classifier). It's plain Python, SQLite and a static HTML file, so it runs on a standard office PC.
+
+**My role.** I built this on my own. I gathered what managers and supervisors needed and defined the KPI rules
+(what counts as an actual breakdown, the attend-time target, the financial-year basis). I also checked every
+figure against the source system. I worked with Claude Code as an AI pair programmer: I set the direction and
+made the decisions, and it wrote much of the code and the visual design under my review.
+
+**Next.** Deeper root-cause analysis: which components fail first and whether repeat failures follow PM misses.
+I also want to keep improving the report design.
+
 ## What it does
 
 | Output | What it answers |
