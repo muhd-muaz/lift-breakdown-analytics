@@ -72,3 +72,7 @@ docs/                   screenshots
 - KPI cards show the value, the target, a 12-month sparkline and the change against the same months of the
   prior FY.
 - Tables right-align numbers, use tabular figures, and are sortable and searchable, with CSV export.
+
+## Licence
+
+MIT for this code (see `LICENSE`). ECharts is Apache-2.0 (`src/dashboard/vendor/ECHARTS_LICENSE.txt`).
