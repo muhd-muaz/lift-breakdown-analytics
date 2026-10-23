@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acme Lifts Breakdown Dashboard</title>
+<style>
+:root{--ink:#1F2933;--muted:#6B7680;--line:#E3E7EB;--surface:#FFFFFF;--page:#F5F7F9;--p:#2F5D8C;--s:#9DB4CC;--n:#C9D1D9;--acc:#C0392B;--hover:#F0F3F6}
+@media (prefers-color-scheme:dark){:root{--ink:#E6EAEE;--muted:#9AA5B1;--line:#2C343C;--surface:#1A2026;--page:#11161B;--p:#6E9BCB;--s:#3F5A75;--n:#3A434C;--hover:#222A31}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:13px/1.45 "Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+header{padding:16px 24px 8px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline}
+h1{font-size:22px;font-weight:600;margin:0}
+.meta{color:var(--muted);font-size:12px}
+.bar{position:sticky;top:0;z-index:5;background:var(--page);padding:8px 24px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.bar label{display:flex;flex-direction:column;font-size:11px;color:var(--muted);gap:2px}
+select,input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 6px;max-width:220px}
+button{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{background:var(--hover)}
+nav{display:flex;flex-wrap:wrap;gap:4px;padding:8px 24px 0}
+nav button{border:none;background:none;padding:8px 10px;border-bottom:2px solid transparent;border-radius:0;color:var(--muted)}
+nav button.on{color:var(--ink);border-bottom-color:var(--p);font-weight:600}
+main{padding:16px 24px 40px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.card,.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.card .l{color:var(--muted);font-size:12px}
+.card .v{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.card .s{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.bad{color:var(--acc)!important}
+h2{font-size:15px;font-weight:600;margin:0 0 8px}
+.note{color:var(--muted);font-size:12px;margin:8px 0 0}
+.tw{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);font-weight:600;cursor:pointer;user-select:none;font-size:12px}
+td.n,th.n{text-align:right}
+tr:hover td{background:var(--hover)}
+td.wrap{white-space:normal;min-width:220px}
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.hide{display:none}
+/* polish: shared by all tabs; .ov = Overview-only layout */
+h1,h2{text-wrap:balance}
+nav{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+nav button{white-space:nowrap}
+.ov .grp{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 8px}
+.ov .cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.card{display:flex;flex-direction:column;gap:4px;min-height:112px}
+.card .l{font-size:13px;color:var(--ink);font-weight:600}
+.card .v{font-size:28px;line-height:1.1;margin:4px 0 0}
+.card .s{text-wrap:pretty}
+.panel svg{max-width:none}
+.ov .basis{color:var(--muted);font-size:12px;margin:16px 0 0;text-wrap:pretty}
+/* iOS-style look: grouped grey page, frosted filter bar, segmented tabs, borderless rounded cards */
+:root{--page:#F2F2F7;--fill:rgba(118,118,128,.12);--seg:#FFFFFF;--shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);--glass:rgba(242,242,247,.8)}
+@media (prefers-color-scheme:dark){:root{--page:#000000;--surface:#1C1C1E;--line:#38383A;--hover:#2C2C2E;--fill:rgba(118,118,128,.24);--seg:#636366;--shadow:none;--glass:rgba(0,0,0,.7)}}
+body{font-family:-apple-system,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+header{padding-top:24px}
+h1{font-size:30px;font-weight:700;letter-spacing:-.02em}
+.bar{background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom-color:transparent;box-shadow:0 .5px 0 var(--line)}
+.bar select,.bar button{background-color:var(--fill);border:none;border-radius:10px;padding:6px 10px}
+.bar button{color:var(--p);font-weight:600}
+nav{margin:12px 24px 0;padding:2px;gap:2px;background:var(--fill);border-radius:10px;width:fit-content;max-width:calc(100% - 48px)}
+nav button{border:none;border-radius:8px;padding:6px 14px;color:var(--ink);transition:background-color .2s ease-out}
+nav button.on{background:var(--seg);border:none;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+nav button:active,.bar button:active{scale:.96}
+.ov .grp{font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--ink);margin:8px 0 12px}
+.card,.panel{border:none;border-radius:16px;box-shadow:var(--shadow);padding:20px}
+.card .l{font-weight:600;color:var(--muted)}
+.card .v{font-size:34px;font-weight:700;letter-spacing:-.02em}
+/* calmer Overview: filters folded away, 4 hero tiles with trend, one strip for the rest */
+header{justify-content:space-between;align-items:center}
+.meta{margin-top:4px}
+.fbtn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-block;background:var(--fill);border-radius:999px;padding:4px 10px;font-size:12px;margin-left:4px}
+#ftog{background:var(--p);color:#fff;border:none;border-radius:999px;padding:7px 16px;font-weight:600;transition:scale .15s ease-out}
+#ftog:active{scale:.96}
+.bar.closed{display:none}
+.ov .hero{min-height:0;gap:2px}
+.ov .hero .v{font-size:40px;margin:4px 0 0}
+.ov .spark{width:100%;height:56px;margin:12px 0 4px}
+.ech{width:100%;height:360px}
+.ov .hero .d{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ov .strip{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-radius:16px;box-shadow:var(--shadow);margin:0 0 24px;padding:4px 0}
+.ov .strip>div{padding:12px 20px;display:flex;flex-direction:column;gap:2px}
+.ov .strip>div+div{border-left:1px solid var(--line)}
+.ov .strip .l{font-size:12px;color:var(--muted)}
+.ov .strip b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.ov .basis summary{cursor:pointer;color:var(--p);font-weight:600;width:fit-content}
+/* tables and tools inside rounded panels */
+.cards{gap:16px;margin-bottom:24px}
+.panel h2{font-size:17px;letter-spacing:-.01em;margin-bottom:12px}
+.panel .tw{border:none;border-radius:0}
+th{color:var(--muted);font-weight:600}
+th,td{padding:8px 10px}
+.tools input,.tools button{background:var(--fill);border:none;border-radius:10px;padding:6px 12px}
+.tools button{color:var(--p);font-weight:600}
+.tools button:active{scale:.96}
+@media (max-width:720px){
+  .ov .strip{grid-template-columns:1fr 1fr}
+  .ov .strip>div:nth-child(3){border-left:none}
+  .ov .strip>div:nth-child(n+3){border-top:1px solid var(--line)}
+  .ov .hero .v{font-size:30px}
+  .chip{display:none}
+  nav{margin:12px 16px 0;max-width:calc(100% - 32px)}
+  header,.bar,main{padding-left:16px;padding-right:16px}
+  .bar{position:static;display:grid;grid-template-columns:1fr 1fr}
+  select,input{max-width:none;width:100%}
+  .g2{grid-template-columns:1fr}
+  .cards,.ov .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .card{min-height:96px;padding:12px}
+  .card .v{font-size:24px}
+  .ech{height:300px}
+}
+</style>
+</head>
+<body>
+<header><div><h1>Breakdown dashboard</h1><div class="meta" id="meta"></div></div><div class="fbtn"><span id="chips"></span><button id="ftog" onclick="$('#bar').classList.toggle('closed')">Filters</button></div></header>
+<div class="bar closed" id="bar"></div>
+<nav id="tabs"></nav>
+<main id="main"></main>
+<script>/*__ECHARTS__*/</script>
+<script>
+const D=/*__DATA__*/null;
+const T=D.dict, C=D.cb, N=C.id.length, $=s=>document.querySelector(s);
+const fmt=(v,d=0)=>v==null||isNaN(v)?"–":Number(v).toLocaleString("en-MY",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=v=>v==null||isNaN(v)?"–":(v*100).toFixed(1)+"%";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const med=a=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y);if(!a.length)return null;const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2};
+const q90=a=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y);return a.length?a[Math.min(a.length-1,Math.floor(.9*(a.length-1)))]:null};
+const val=(f,i)=>T[f][C[f][i]];
+const TGT=D.meta.target_mantrap;
+
+// ---------- filters ----------
+const F=[["fy","Financial year"],["mk","Month"],["zone","BU / zone"],["state","State"],["sector","Sector"],["ltype","Lift type"],["eng","Engineer"],["bt","Actual / non-actual"]];
+const S={};
+function buildBar(){
+  let h="";
+  for(const [f,l] of F){const opts=T[f].map((v,i)=>[v,i]).filter(x=>x[0]!=="").sort((a,b)=>a[0].localeCompare(b[0]));
+    h+=`<label>${l}<select data-f="${f}"><option value="">All</option>${opts.map(([v])=>`<option>${esc(v)}</option>`).join("")}</select></label>`}
+  h+=`<button id="reset">Reset</button>`;$("#bar").innerHTML=h;
+  $("#bar").querySelectorAll("select").forEach(s=>s.onchange=()=>{S[s.dataset.f]=s.value;render()});
+  $("#reset").onclick=()=>{for(const k in S)delete S[k];$("#bar").querySelectorAll("select").forEach(s=>s.value=s.dataset.f==="fy"?defFY:"");S.fy=defFY;render()};
+}
+const defFY=T.fy.includes("FY2026")?"FY2026":T.fy[T.fy.length-1];
+function rows(skip=[]){const out=[];const act=Object.entries(S).filter(([k,v])=>v&&!k.startsWith("__")&&!skip.includes(k));
+  const codes=act.map(([k,v])=>[k,T[k].indexOf(v)]);
+  for(let i=0;i<N;i++){let ok=true;for(const [k,c] of codes)if(C[k][i]!==c){ok=false;break}if(ok)out.push(i)}return out}
+function group(idx,key){const m=new Map();for(const i of idx){const k=key(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i)}return m}
+const sum=(idx,f)=>idx.reduce((a,i)=>a+(C[f][i]||0),0);
+const isAct=i=>val("bt",i)==="Actual";
+function kpis(idx){const lifts=group(idx.filter(i=>val("lift",i)!==""),i=>C.lift[i]);let over=0;for(const [,a] of lifts)if(a.filter(isAct).length>2)over++;
+  const resp=idx.map(i=>C.resp[i]);const w=idx.filter(i=>C.win[i]!=null);
+  return{n:idx.length,act:idx.filter(isAct).length,non:idx.filter(i=>val("bt",i)==="Non-actual").length,man:sum(idx,"man"),
+    over,lifts:lifts.size,r30:sum(idx,"r30"),r7:sum(idx,"r7"),med:med(resp),p90:q90(resp),win:w.length?sum(w,"win")/w.length:null,
+    ev:w.length,matched:sum(idx,"m"),rep:med(idx.map(i=>C.rep[i]))}}
+function pmAgg(){const P=D.pm,act=Object.entries(S).filter(([k,v])=>v&&["fy","mk","zone","state","sector","ltype","eng"].includes(k));
+  const out=[];for(let i=0;i<P.due.length;i++){let ok=true;for(const [k,v] of act){if(T[k+"_pm"][P[k][i]]!==v){ok=false;break}}if(ok)out.push(i)}return out}
+
+// ---------- rendering helpers ----------
+function table(cols,data,{id="t",search=false,csv=true,sort=null,limit=null}={}){
+  const tid="tb_"+id;let h=`<div class="tools">`;
+  if(search)h+=`<input placeholder="Search…" oninput="filt('${tid}',this.value)">`;
+  if(csv)h+=`<button onclick="csv('${tid}')">Export CSV</button>`;
+  h+=`<span class="note">${data.length.toLocaleString()} rows</span></div><div class="tw"><table id="${tid}"><thead><tr>`;
+  cols.forEach((c,j)=>h+=`<th class="${c.n?"n":""}" onclick="srt('${tid}',${j},${!!c.n})">${esc(c.h)}</th>`);h+="</tr></thead><tbody>";
+  let d=data;if(sort!=null)d=[...d].sort((a,b)=>(b[sort]??-1e18)-(a[sort]??-1e18));if(limit)d=d.slice(0,limit);
+  for(const r of d){h+="<tr>";cols.forEach((c,j)=>{const v=r[j];const cls=[c.n?"n":"",c.wrap?"wrap":"",c.bad&&c.bad(v,r)?"bad":""].join(" ");
+    h+=`<td class="${cls}" data-v="${v??""}">${c.f?c.f(v,r):esc(v)}</td>`});h+="</tr>"}
+  return h+"</tbody></table></div>"}
+window.srt=(tid,j,isn)=>{const t=document.getElementById(tid),b=t.tBodies[0],r=[...b.rows],dir=t.dataset.s==j?-(+t.dataset.d||1):-1;
+  r.sort((x,y)=>{let a=x.cells[j].dataset.v,c=y.cells[j].dataset.v;if(isn){a=a===""?-1e18:+a;c=c===""?-1e18:+c;return(a-c)*-dir}return a.localeCompare(c)*-dir});
+  r.forEach(x=>b.appendChild(x));t.dataset.s=j;t.dataset.d=dir};
+window.filt=(tid,q)=>{q=q.toLowerCase();for(const r of document.getElementById(tid).tBodies[0].rows)r.classList.toggle("hide",!r.textContent.toLowerCase().includes(q))};
+window.csv=tid=>{const t=document.getElementById(tid);const L=[...t.rows].filter(r=>!r.classList.contains("hide")).map(r=>[...r.cells].map(c=>`"${c.textContent.replace(/"/g,'""')}"`).join(","));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+L.join("\n")],{type:"text/csv"}));a.download=tid+".csv";a.click()};
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],monLab=m=>MON[+m.slice(5,7)-1]+" "+m.slice(2,4);
+const card=(l,v,s="",bad=false)=>`<div class="card"><div class="l">${l}</div><div class="v ${bad?"bad":""}">${v}</div><div class="s">${s}</div></div>`;
+let CH=[];const AFTER=[],cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function ec(id,opt){const el=document.getElementById(id);if(!el||!window.echarts)return;const c=echarts.init(el);
+  c.setOption({animationDuration:700,textStyle:{fontFamily:getComputedStyle(document.body).fontFamily},
+    tooltip:{backgroundColor:cssv("--surface"),borderColor:cssv("--line"),textStyle:{color:cssv("--ink")},extraCssText:"border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12)"},...opt});CH.push(c)}
+window.addEventListener("resize",()=>CH.forEach(c=>c.resize()));
+function spark(id,labels,vals,f){AFTER.push(()=>ec(id,{grid:{left:4,right:8,top:8,bottom:4},
+  tooltip:{trigger:"axis",formatter:p=>`${p[0].name}: <b>${p[0].value==null?"–":f(p[0].value)}</b>`},
+  xAxis:{type:"category",show:false,boundaryGap:false,data:labels},yAxis:{type:"value",show:false,scale:true},
+  series:[{type:"line",data:vals,smooth:.35,showSymbol:false,symbolSize:7,connectNulls:true,lineStyle:{width:2.5,color:cssv("--p")},itemStyle:{color:cssv("--p")},
+    areaStyle:{color:cssv("--p"),opacity:.12},endLabel:{show:false}}]}));return `<div class="spark" id="${id}"></div>`}
+function monthChart(id,labels,series,line=null){// series [[name,cssVar,vals]] stacked; rounded top + total on the top non-zero segment; line {name,vals,f} on its own right axis
+  const tot=labels.map((_,i)=>series.reduce((t,x)=>t+(x[2][i]||0),0)),top=labels.map((_,i)=>series.reduce((k,x,j)=>x[2][i]?j:k,-1));
+  AFTER.push(()=>ec(id,{grid:{left:4,right:4,top:44,bottom:4,containLabel:true},
+    legend:{top:0,left:0,icon:"roundRect",itemWidth:12,itemHeight:12,itemGap:16,textStyle:{color:cssv("--muted")}},
+    tooltip:{trigger:"axis",axisPointer:{type:"shadow",shadowStyle:{color:"rgba(128,128,128,.10)"}},
+      formatter:p=>`<b>${p[0].name}</b> · ${fmt(tot[p[0].dataIndex])}<br>`+p.map(x=>`${x.marker}${x.seriesName}: ${x.value==null?"–":x.seriesType==="line"?line.f(x.value):fmt(x.value)}`).join("<br>")},
+    xAxis:{type:"category",data:labels,axisTick:{show:false},axisLine:{lineStyle:{color:cssv("--line")}},axisLabel:{color:cssv("--muted")}},
+    yAxis:[{type:"value",splitLine:{lineStyle:{color:cssv("--line"),type:[3,5]}},axisLabel:{color:cssv("--muted"),formatter:v=>fmt(v)}},
+      {type:"value",show:!!line,splitLine:{show:false},axisLabel:{color:cssv("--muted"),formatter:v=>line?line.f(v):v}}],
+    series:series.map(([n,c,v],j)=>({name:n,type:"bar",stack:"t",barMaxWidth:48,emphasis:{focus:"series"},itemStyle:{color:cssv(c)},
+      data:v.map((x,i)=>top[i]===j?{value:x,itemStyle:{borderRadius:[8,8,0,0]},label:{show:true,position:"top",formatter:()=>fmt(tot[i]),color:cssv("--ink"),fontWeight:600}}:x)})).concat(line?[{name:line.name,type:"line",yAxisIndex:1,data:line.vals,smooth:.3,connectNulls:true,symbolSize:6,
+        lineStyle:{width:2.5,color:cssv("--ink")},itemStyle:{color:cssv("--ink")},
+        markLine:line.target==null?undefined:{symbol:"none",silent:true,lineStyle:{color:cssv("--acc"),type:"dashed"},label:{position:"insideEndTop",color:cssv("--acc"),formatter:`Target ${line.f(line.target)}`},data:[{yAxis:line.target}]}}]:[])}));
+  return `<div class="ech" id="${id}"></div>`}
+function hbar(id,items){// items [label,value], largest first; drawn top-down
+  AFTER.push(()=>ec(id,{grid:{left:4,right:48,top:4,bottom:4,containLabel:true},tooltip:{trigger:"axis",axisPointer:{type:"shadow",shadowStyle:{color:"rgba(128,128,128,.10)"}},valueFormatter:v=>fmt(v)},
+    xAxis:{type:"value",show:false},yAxis:{type:"category",inverse:true,data:items.map(x=>String(x[0]).slice(0,34)),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:cssv("--muted")}},
+    series:[{type:"bar",data:items.map(x=>x[1]),barMaxWidth:16,itemStyle:{color:cssv("--p"),borderRadius:[0,6,6,0]},label:{show:true,position:"right",color:cssv("--ink"),formatter:p=>fmt(p.value)}}]}));
+  return `<div class="ech" id="${id}" style="height:${items.length*26+16}px"></div>`}
+function delta(cur,prev,fy,rate,upGood){if(cur==null||prev==null||!prev)return "&nbsp;";// rate: change in points; else % change
+  const d=rate?(cur-prev)*100:(cur/prev-1)*100,worse=upGood?d<0:d>0;
+  return `<span class="${worse?"bad":""}">${d>=0?"▲":"▼"} ${Math.abs(d).toFixed(1)}${rate?" pts":"%"}</span> vs ${esc(fy)}`}
+function prevFY(ms){// same filters, previous FY, same months of the year only (fair for a part year)
+  if(!S.fy)return null;const fy="FY"+(+S.fy.slice(2)-1);if(!T.fy.includes(fy))return null;
+  const keep={fy:S.fy,mk:S.mk},mm=new Set(ms.map(m=>m.slice(5)));S.fy=fy;if(S.mk)S.mk=(+S.mk.slice(0,4)-1)+S.mk.slice(4);
+  let r=[],p=[];if(!S.mk||T.mk.includes(S.mk)){r=rows().filter(i=>mm.has(val("mk",i).slice(5)));p=pmAgg().filter(i=>mm.has(T.mk_pm[D.pm.mk[i]].slice(5)))}
+  S.fy=keep.fy;if(keep.mk)S.mk=keep.mk;else delete S.mk;
+  return r.length?{fy,k:kpis(r),due:p.reduce((a,i)=>a+D.pm.due[i],0),done:p.reduce((a,i)=>a+D.pm.done[i],0)}:null}
+const months=idx=>[...new Set(idx.map(i=>val("mk",i)))].filter(Boolean).sort();
+const basis=`FY = Oct–Sep, by ERP Created date. Non-actual = ${D.meta.nonactual}. Attend target ${D.meta.target_mantrap} min (non-mantrap provisional). Fault code = ERP, else predicted from remarks.`;
+
+// ---------- pages ----------
+const P={
+Overview(){const idx=rows(),k=kpis(idx),pm=pmAgg(),due=pm.reduce((a,i)=>a+D.pm.due[i],0),done=pm.reduce((a,i)=>a+D.pm.done[i],0),ms=months(idx);
+  const by=group(idx,i=>val("mk",i));const mv=t=>ms.map(m=>(by.get(m)||[]).filter(i=>val("bt",i)===t).length);
+  const pmBy=new Map();pm.forEach(i=>{const m=T.mk_pm[D.pm.mk[i]],o=pmBy.get(m)||[0,0];o[0]+=D.pm.due[i];o[1]+=D.pm.done[i];pmBy.set(m,o)});
+  const pms=[...pmBy.keys()].sort(),winM=ms.map(m=>{const a=(by.get(m)||[]).filter(i=>C.win[i]!=null);return a.length?sum(a,"win")/a.length:null});
+  const ml=ms.map(monLab),pv=prevFY(ms),pdone=pv&&pv.due?pv.done/pv.due:null,pmr=due?done/due:null;
+  const hero=(l,v,sub,trend,dl,bad)=>`<div class="card hero"><div class="l">${l}</div><div class="v ${bad?"bad":""}">${v}</div><div class="s">${sub}</div>${trend}<div class="d">${dl}</div></div>`;
+  const mini=(l,v,bad)=>`<div><span class="l">${l}</span><b class="${bad?"bad":""}">${v}</b></div>`;
+  return `<div class="ov"><div class="cards">
+  ${hero("Callbacks",fmt(k.n),`on ${fmt(k.lifts)} lifts`,spark("sp1",ml,ms.map(m=>(by.get(m)||[]).length),fmt),delta(k.n,pv&&pv.k.n,pv&&pv.fy,false,false))}
+  ${hero("Actual breakdowns",fmt(k.act),`${fmt(k.non)} non-actual`,spark("sp2",ml,mv("Actual"),fmt),delta(k.act,pv&&pv.k.act,pv&&pv.fy,false,false))}
+  ${hero(`Attended within ${TGT} min`,pct(k.win),"target 80%",spark("sp3",ml,winM,pct),delta(k.win,pv&&pv.k.win,pv&&pv.fy,true,true),k.win!=null&&k.win<.8)}
+  ${hero("PM done",pct(pmr),"target 95%",spark("sp4",pms.map(monLab),pms.map(m=>pmBy.get(m)[0]?pmBy.get(m)[1]/pmBy.get(m)[0]:null),pct),delta(pmr,pdone,pv&&pv.fy,true,true),due&&pmr<.95)}</div>
+  <div class="strip">${mini("Entrapments",fmt(k.man))}${mini("Lifts over KPI (&gt;2 actual)",S.fy?fmt(k.over):"pick one FY",k.over>0&&S.fy)}${mini("Repeat within 30 days",pct(k.r30/k.n))}${mini("Median response",fmt(k.med,1)+" min")}</div>
+  <div class="panel"><h2>Callbacks by month</h2>${monthChart("ovc",ml,[["Actual","--p",mv("Actual")],["Non-actual","--s",mv("Non-actual")],["Unknown","--n",mv("Unknown")]])}</div>
+  <details class="basis"><summary>How these are counted</summary>${basis} Trend lines show each month; the change compares the same months of the previous FY.</details></div>`},
+"Per unit"(){const fy=S.fy||defFY,U=D.units[fy];if(!U)return `<div class="panel">No unit base for ${esc(fy)}.</div>`;
+  const keep=[];for(let i=0;i<U.lift.length;i++){if(S.zone&&U.zone[i]!==S.zone)continue;if(S.state&&U.state[i]!==S.state)continue;if(S.sector&&U.sector[i]!==S.sector)continue;if(S.ltype&&U.ltype[i]!==S.ltype)continue;keep.push(i)}
+  const n=keep.length,c=f=>keep.filter(i=>f(U.act[i])).length,B=[["0 actual",c(a=>a===0)],["1 actual",c(a=>a===1)],["2 actual",c(a=>a===2)],["< 2 (0–1)",c(a=>a<2)],["≤ 2 (0–2)",c(a=>a<=2)],["> 2 (3 or more)",c(a=>a>2)]];
+  const dep=keep.filter(i=>U.pred[i]>0).length,flip=keep.filter(i=>(U.act[i]>2)!==(U.act[i]-U.pred[i]>2)).length;
+  const zg=new Map();keep.forEach(i=>{const z=U.zone[i]||"(no zone)";if(!zg.has(z))zg.set(z,[]);zg.get(z).push(i)});
+  const zc=(a,f)=>a.filter(i=>f(U.act[i])).length,zr=[...zg].map(([z,a])=>[z,a.length,zc(a,v=>v===0),zc(a,v=>v===1),zc(a,v=>v===2),zc(a,v=>v>2),zc(a,v=>v>2)/a.length]).sort((x,y)=>y[1]-x[1]);
+  zr.push(["Total",n,B[0][1],B[1][1],B[2][1],B[5][1],B[5][1]/Math.max(1,n)]);
+  return `<div class="cards">${card("Units in base",fmt(n),esc(fy))}${[B[0],B[1],B[2],B[5]].map(([l,v])=>card(l,fmt(v),pct(v/n),l.startsWith(">")&&v>0)).join("")}</div>
+  <div class="grid g2"><div class="panel"><h2>Actual breakdowns per unit, ${esc(fy)}</h2>${table([{h:"Bucket"},{h:"Units",n:1,f:v=>fmt(v)},{h:"% of units",n:1,f:v=>pct(v)}],B.map(([l,v])=>[l,v,v/n]),{id:"bk",csv:false})}
+  <p class="note">Unit base: units under a contract agreement overlapping ${esc(fy)}, plus units with a callback or PM job in it (0-breakdown units included). Exactly 2 counts in ≤ 2. Month, engineer and actual/non-actual filters don't apply here.
+  ${fmt(dep)} units include predicted fault codes; ${fmt(flip)} would move across the 2-line without them.</p></div>
+  <div class="panel"><h2>Units by actual breakdowns, by BU / zone</h2>${table([{h:"BU / zone"},{h:"Units",n:1,f:v=>fmt(v)},{h:"0",n:1,f:v=>fmt(v)},{h:"1",n:1,f:v=>fmt(v)},{h:"2",n:1,f:v=>fmt(v)},{h:"> 2",n:1,f:v=>fmt(v),bad:v=>v>0},{h:"> 2 %",n:1,f:v=>pct(v),bad:v=>v>.2}],zr,{id:"bz"})}</div></div>
+  <div class="panel" style="margin-top:16px"><h2>Units</h2>${table([{h:"Lift"},{h:"Jobsite"},{h:"BU / zone"},{h:"Type"},{h:"Age (yr)",n:1,f:v=>fmt(v,1)},{h:"Callbacks",n:1},{h:"Actual",n:1,bad:v=>v>2},{h:"From predicted code",n:1}],
+    keep.map(i=>[U.lift[i],U.site[i],U.zone[i],U.ltype[i],U.age[i],U.cb[i],U.act[i],U.pred[i]]),{id:"un",search:true,sort:6})}</div>`},
+"Mantrap follow-up"(){const idx=rows().filter(i=>C.man[i]),BADM=1440,ok=i=>C.resp[i]!=null&&C.resp[i]<=BADM;// > 1 day = likely wrong CallDesk match
+  const over=idx.filter(i=>ok(i)&&C.resp[i]>TGT),nt=idx.filter(i=>C.resp[i]==null),chk=idx.filter(i=>C.resp[i]!=null&&C.resp[i]>BADM);
+  const g=k=>[...group(idx,i=>val(k,i))].map(([z,a])=>{const t=a.filter(ok);return[z||"(blank)",a.length,t.filter(i=>C.resp[i]>TGT).length,t.length?t.filter(i=>C.resp[i]>TGT).length/t.length:null,med(t.map(i=>C.resp[i])),t.length?Math.max(...t.map(i=>C.resp[i])):null]});
+  const gc=[{h:""},{h:"Mantraps",n:1},{h:`Over ${TGT} min`,n:1,bad:v=>v>0},{h:"% over",n:1,f:v=>pct(v),bad:v=>v>.2},{h:"Median (min)",n:1,f:v=>fmt(v,1)},{h:"Worst (min)",n:1,f:v=>fmt(v,0),bad:v=>v>TGT}];
+  return `<div class="cards">${card("Mantraps",fmt(idx.length))}${card(`Attended after ${TGT} min`,fmt(over.length),pct(over.length/Math.max(1,idx.length-nt.length-chk.length))+" of timed",over.length>0)}${card("Check match",fmt(chk.length),"response over 1 day, left out",chk.length>0)}${card("No attend time",fmt(nt.length),"not matched to CallDesk")}${card("Median response",fmt(med(idx.filter(ok).map(i=>C.resp[i])),1)+" min")}</div>
+  <div class="panel"><h2>Follow-up list: mantraps attended after ${TGT} minutes</h2>${table([{h:"Date"},{h:"Response (min)",n:1,f:v=>fmt(v,1),bad:()=>true},{h:"Callback",n:1},{h:"Ticket"},{h:"Jobsite"},{h:"Lift"},{h:"BU / zone"},{h:"Engineer"},{h:"Supervisor"},{h:"Fault"},{h:"Status"}],
+    over.map(i=>[C.date[i],C.resp[i],C.id[i],C.ticket[i],val("site",i),val("lift",i),val("zone",i),val("eng",i),val("sup",i),val("fault",i),val("sg",i)]),{id:"mt",search:true,sort:1})}</div>
+  <div class="panel" style="margin-top:16px"><h2>Check match: response over 1 day</h2><p class="note">Likely matched to the wrong CallDesk ticket. Left out of the over-${TGT} count, medians and the tables below until the match is fixed.</p>${table([{h:"Date"},{h:"Response (min)",n:1,f:v=>fmt(v,0)},{h:"Callback",n:1},{h:"Ticket"},{h:"Jobsite"},{h:"Lift"},{h:"BU / zone"},{h:"Engineer"},{h:"Match"}],
+    chk.map(i=>[C.date[i],C.resp[i],C.id[i],C.ticket[i],val("site",i),val("lift",i),val("zone",i),val("eng",i),val("mc",i)]),{id:"mc",search:true,sort:1})}</div>
+  <div class="grid g2" style="margin-top:16px"><div class="panel"><h2>By BU / zone</h2>${table(gc.map((c,j)=>j?c:{h:"BU / zone"}),g("zone"),{id:"mz",sort:2})}</div><div class="panel"><h2>By engineer</h2>${table(gc.map((c,j)=>j?c:{h:"Engineer"}),g("eng"),{id:"me",sort:2,search:true})}</div></div>`},
+Response(){const idx=rows(),ms=months(idx),by=group(idx,i=>val("mk",i));
+  const zr=[...group(idx,i=>val("zone",i))].map(([z,a])=>{const k=kpis(a);return[z||"(blank)",k.matched,k.med,k.p90,k.win,k.ev-Math.round((k.win||0)*k.ev),k.rep]});
+  return `<div class="panel"><h2>Median response by month (CallDesk Ack → At-site)</h2>${monthChart("rsc",ms.map(monLab),[["Timed callbacks","--n",ms.map(m=>(by.get(m)||[]).filter(i=>C.resp[i]!=null).length)]],{name:"Median response (min)",vals:ms.map(m=>med((by.get(m)||[]).map(i=>C.resp[i]))),f:v=>fmt(v,1),target:TGT})}</div>
+  <div class="panel" style="margin-top:16px"><h2>By BU / zone</h2>${table([{h:"BU / zone"},{h:"Matched",n:1,f:v=>fmt(v)},{h:"Median (min)",n:1,f:v=>fmt(v,1),bad:v=>v>TGT},{h:"P90 (min)",n:1,f:v=>fmt(v,0)},{h:`Within ${TGT} min`,n:1,f:v=>pct(v),bad:v=>v!=null&&v<.8},{h:"Over target",n:1,f:v=>fmt(v)},{h:"Median repair (min)",n:1,f:v=>fmt(v,1)}],zr,{id:"rz",sort:1})}<p class="note">Average response is not shown: a few multi-day records distort it. ${basis}</p></div>`},
+Faults(){const idx=rows();const fc=[...group(idx.filter(i=>val("fault",i)),i=>val("fault",i))].map(([f,a])=>[f,a.length,a.filter(isAct).length]).sort((a,b)=>b[1]-a[1]);
+  const cat=[...group(idx,i=>val("cat",i)||"(no code)")].map(([c,a])=>[c,a.length,a.filter(isAct).length,a.filter(i=>val("bt",i)==="Non-actual").length,a.filter(i=>val("bt",i)==="Unknown").length]);
+  const ty=[...group(idx,i=>val("ltype",i)||"(no lift)")].map(([t,a])=>{const l=new Set(a.map(i=>C.lift[i])).size;return[t,a.length,a.filter(isAct).length,l,a.filter(isAct).length/l]});
+  const ct=[...group(idx.filter(i=>val("ctrl",i)),i=>val("ctrl",i))].map(([t,a])=>{const l=new Set(a.map(i=>C.lift[i])).size;return[t,a.filter(isAct).length,l,a.filter(isAct).length/l]});
+  const src=[...group(idx,i=>val("src",i))].map(([s,a])=>[s,a.length]);
+  return `<div class="grid g2"><div class="panel"><h2>Top 20 fault codes</h2>${hbar("fcc",fc.slice(0,20).map(([f,n])=>[f+" "+(D.fdesc[f]||""),n]))}</div>
+  <div class="panel"><h2>By category</h2>${table([{h:"Category"},{h:"Callbacks",n:1,f:v=>fmt(v)},{h:"Actual",n:1,f:v=>fmt(v)},{h:"Non-actual",n:1,f:v=>fmt(v)},{h:"Unknown",n:1,f:v=>fmt(v)}],cat,{id:"fc",sort:1})}
+  <h2 style="margin-top:16px">Fault code source</h2>${table([{h:"Source"},{h:"Callbacks",n:1,f:v=>fmt(v)}],src,{id:"fs",csv:false,sort:1})}</div>
+  <div class="panel"><h2>By lift type</h2>${table([{h:"Lift type"},{h:"Callbacks",n:1,f:v=>fmt(v)},{h:"Actual",n:1,f:v=>fmt(v)},{h:"Lifts",n:1,f:v=>fmt(v)},{h:"Actual per lift",n:1,f:v=>fmt(v,2)}],ty,{id:"ft",sort:2})}</div>
+  <div class="panel"><h2>By controller (mainboard)</h2>${table([{h:"Controller"},{h:"Actual",n:1,f:v=>fmt(v)},{h:"Lifts",n:1,f:v=>fmt(v)},{h:"Actual per lift",n:1,f:v=>fmt(v,2)}],ct,{id:"fk",sort:1,search:true})}</div></div>`},
+"Backlog"(){// callbacks not yet Processed/Realized; all years (FY/month filters ignored), other filters apply
+  const BS=["Open","Approved","Rejected"],idx=rows(["fy","mk"]).filter(i=>BS.includes(val("st",i)));
+  const n=s=>idx.filter(i=>val("st",i)===s).length,o30=idx.filter(i=>C.age[i]>30).length,man=idx.filter(i=>C.man[i]);
+  const g=k=>[...group(idx,i=>val(k,i))].map(([z,a])=>{const ag=a.map(i=>C.age[i]);return[z||"(blank)",a.length,...BS.map(s=>a.filter(i=>val("st",i)===s).length),sum(a,"man"),a.filter(i=>C.age[i]>30).length,Math.max(...ag)]});
+  const gc=[{h:""},{h:"Backlog",n:1},{h:"Open",n:1},{h:"Approved",n:1},{h:"Rejected",n:1,bad:v=>v>0},{h:"Mantraps",n:1,bad:v=>v>0},{h:"Over 30 days",n:1,bad:v=>v>0},{h:"Oldest (days)",n:1,f:v=>fmt(v,0)}];
+  return `<div class="cards">${card("Backlog",fmt(idx.length),"not yet Processed")}${card("Open",fmt(n("Open")))}${card("Approved",fmt(n("Approved")),"waiting to be processed")}${card("Rejected",fmt(n("Rejected")),"sent back for rework",n("Rejected")>0)}${card("Mantraps in backlog",fmt(man.length),"",man.length>0)}${card("Over 30 days",fmt(o30),pct(o30/Math.max(1,idx.length))+" of backlog",o30>0)}</div>
+  <div class="panel"><h2>Backlog, oldest first</h2>${table([{h:"Age (days)",n:1,f:v=>fmt(v,0),bad:v=>v>30},{h:"Created"},{h:"Status"},{h:"Callback",n:1},{h:"Ticket"},{h:"Mantrap",f:v=>v?"Yes":"",bad:v=>v>0},{h:"Jobsite"},{h:"Lift"},{h:"BU / zone"},{h:"Engineer"},{h:"Supervisor"},{h:"Description",wrap:1}],
+    idx.map(i=>[C.age[i],C.date[i],val("st",i),C.id[i],C.ticket[i],C.man[i],val("site",i),val("lift",i),val("zone",i),val("eng",i),val("sup",i),C.desc[i]]),{id:"bl",search:true,sort:0})}
+  <p class="note">Open, Approved and Rejected callbacks from all years; the year and month filters don't apply here. Age counts from the ERP created date to the time this page was built.</p></div>
+  <div class="grid g2" style="margin-top:16px"><div class="panel"><h2>By supervisor</h2>${table(gc.map((c,j)=>j?c:{h:"Supervisor"}),g("sup"),{id:"bs",sort:1,search:true})}</div><div class="panel"><h2>By engineer</h2>${table(gc.map((c,j)=>j?c:{h:"Engineer"}),g("eng"),{id:"be",sort:1,search:true})}</div></div>
+  <div class="panel" style="margin-top:16px"><h2>By BU / zone</h2>${table(gc.map((c,j)=>j?c:{h:"BU / zone"}),g("zone"),{id:"bz2",sort:1})}</div>`},
+"Lifts and sites"(){const idx=rows();const L=[...group(idx.filter(i=>val("lift",i)),i=>val("lift",i))].map(([l,a])=>[l,val("site",a[0]),val("ltype",a[0]),a.length,a.filter(isAct).length,sum(a,"man"),sum(a,"r7"),sum(a,"r30")]);
+  const Sx=[...group(idx,i=>val("site",i))].map(([s,a])=>[s,val("zone",a[0]),a.length,a.filter(isAct).length,new Set(a.map(i=>C.lift[i])).size,sum(a,"r30")/a.length]);
+  return `<div class="panel"><h2>Lifts</h2>${table([{h:"Lift"},{h:"Jobsite"},{h:"Type"},{h:"Callbacks",n:1},{h:"Actual",n:1,bad:v=>v>2},{h:"Entrapments",n:1},{h:"Repeat 7d",n:1},{h:"Repeat 30d",n:1}],L,{id:"ll",search:true,sort:4})}</div>
+  <div class="panel" style="margin-top:16px"><h2>Jobsites</h2>${table([{h:"Jobsite"},{h:"BU / zone"},{h:"Callbacks",n:1},{h:"Actual",n:1},{h:"Lifts",n:1},{h:"Repeat 30d %",n:1,f:v=>pct(v)}],Sx,{id:"ls",search:true,sort:3})}</div>`},
+People(){const idx=rows(),pm=pmAgg(),pe=new Map();pm.forEach(i=>{const e=T.eng_pm[D.pm.eng[i]];const o=pe.get(e)||[0,0];o[0]+=D.pm.due[i];o[1]+=D.pm.done[i];pe.set(e,o)});
+  const E=[...group(idx,i=>val("eng",i))].map(([e,a])=>{const k=kpis(a),p=pe.get(e);return[e||"(blank)",k.n,k.act,k.man,k.med,k.win,k.r30/k.n,p&&p[0]?p[1]/p[0]:null]});
+  const Su=[...group(idx,i=>val("sup",i))].map(([e,a])=>{const k=kpis(a);return[e||"(blank)",k.n,k.act,k.man,k.med,k.win]});
+  return `<div class="panel"><h2>Engineers</h2>${table([{h:"Engineer"},{h:"Callbacks",n:1},{h:"Actual",n:1},{h:"Entrapments",n:1},{h:"Median response",n:1,f:v=>fmt(v,1),bad:v=>v>TGT},{h:`Within ${TGT} min`,n:1,f:v=>pct(v),bad:v=>v!=null&&v<.8},{h:"Repeat 30d %",n:1,f:v=>pct(v)},{h:"PM done %",n:1,f:v=>pct(v),bad:v=>v!=null&&v<.95}],E,{id:"pe",search:true,sort:1})}</div>
+  <div class="panel" style="margin-top:16px"><h2>Supervisors</h2>${table([{h:"Supervisor"},{h:"Callbacks",n:1},{h:"Actual",n:1},{h:"Entrapments",n:1},{h:"Median response",n:1,f:v=>fmt(v,1),bad:v=>v>TGT},{h:`Within ${TGT} min`,n:1,f:v=>pct(v),bad:v=>v!=null&&v<.8}],Su,{id:"ps",sort:1})}</div>`},
+PM(){const pm=pmAgg(),P=D.pm,bm=new Map(),bz=new Map();pm.forEach(i=>{for(const [m,k] of [[bm,T.mk_pm[P.mk[i]]],[bz,T.zone_pm[P.zone[i]]||"(blank)"]]){const o=m.get(k)||[0,0];o[0]+=P.due[i];o[1]+=P.done[i];m.set(k,o)}});
+  const ms=[...bm.keys()].sort(),idx=rows(),ab=group(idx.filter(isAct),i=>val("mk",i));
+  return `<div class="panel"><h2>PM due vs done by month</h2>${monthChart("pmc",ms.map(monLab),[["Done","--p",ms.map(m=>bm.get(m)[1])],["Missed","--acc",ms.map(m=>bm.get(m)[0]-bm.get(m)[1])]],{name:"Actual breakdowns",vals:ms.map(m=>(ab.get(m)||[]).length),f:v=>fmt(v)})}
+  <p class="note">Due = lift-months already past; done = realised preventive job that month (SMS jobs). The actual/non-actual filter doesn't apply to PM.</p></div>
+  <div class="panel" style="margin-top:16px"><h2>By BU / zone</h2>${table([{h:"BU / zone"},{h:"PM due",n:1,f:v=>fmt(v)},{h:"Done",n:1,f:v=>fmt(v)},{h:"Done %",n:1,f:v=>pct(v),bad:v=>v!=null&&v<.95},{h:"Missed",n:1,f:v=>fmt(v),bad:v=>v>0}],[...bz].map(([z,[d,o]])=>[z,d,o,d?o/d:null,d-o]),{id:"pz",sort:4})}</div>`},
+"Data quality"(){const idx=rows(),ms=months(idx),by=group(idx,i=>val("mk",i));
+  const R=ms.map(m=>{const a=by.get(m)||[];return[m,a.length,a.length-sum(a,"hf"),a.length-sum(a,"ht"),a.length-sum(a,"hl"),sum(a,"ht")-sum(a,"m"),sum(a,"m")/a.length]});
+  const sg=[...group(idx,i=>val("sg",i))].map(([s,a])=>[s,a.length,a.length-sum(a,"hf")]),mc=[...group(idx,i=>val("mc",i))].map(([s,a])=>[s,a.length]);
+  return `<div class="panel"><h2>By month</h2>${table([{h:"Month"},{h:"Callbacks",n:1},{h:"No fault code",n:1},{h:"No ticket",n:1},{h:"No lift",n:1},{h:"Ticket not matched",n:1},{h:"Match %",n:1,f:v=>pct(v)}],R,{id:"dq"})}</div>
+  <div class="grid g2" style="margin-top:16px"><div class="panel"><h2>Workflow status</h2>${table([{h:"Status"},{h:"Callbacks",n:1},{h:"No fault code",n:1}],sg,{id:"ds",csv:false,sort:1})}<p class="note">ERP sets the fault code only when a callback is Processed, so a missing fault code is mostly workflow backlog.</p></div>
+  <div class="panel"><h2>CallDesk match</h2>${table([{h:"Match class"},{h:"Callbacks",n:1}],mc,{id:"dm",csv:false,sort:1})}</div></div>`},
+"Lift history"(){const lifts=T.lift.filter(Boolean);const cur=S.__lift||"";
+  let h=`<div class="panel"><div class="tools"><input id="lq" list="ll_" placeholder="Type a lift code, e.g. U20001" value="${esc(cur)}" style="min-width:280px"><datalist id="ll_">${lifts.map(l=>`<option>${esc(l)}</option>`).join("")}</datalist><button onclick="S.__lift=document.getElementById('lq').value;render()">Show</button><span class="note">All years; filters don't apply.</span></div>`;
+  if(cur){const code=T.lift.indexOf(cur),idx=[];for(let i=0;i<N;i++)if(C.lift[i]===code)idx.push(i);
+    h+=idx.length?`<h2>${esc(cur)} · ${esc(val("site",idx[0]))} · ${esc(val("ltype",idx[0]))}</h2>`+table([{h:"Date"},{h:"Callback",n:1},{h:"Ticket"},{h:"Fault"},{h:"Type"},{h:"Mantrap"},{h:"Engineer"},{h:"Response (min)",n:1,f:v=>fmt(v,1),bad:v=>v>TGT},{h:"Status"},{h:"Description",wrap:1}],
+      idx.map(i=>[C.date[i],C.id[i],C.ticket[i],val("fault",i),val("bt",i),C.man[i]?"Yes":"",val("eng",i),C.resp[i],val("sg",i),C.desc[i]]),{id:"lh"}):`<p class="note">No callbacks for ${esc(cur)}.</p>`}
+  return h+"</div>"}
+};
+let tab=P[decodeURIComponent(location.hash.slice(1))]?decodeURIComponent(location.hash.slice(1)):"Overview";
+window.onerror=(m,u,l)=>{document.body.insertAdjacentHTML("afterbegin",`<pre id="jserr" style="color:#C0392B">JS error: ${m} line ${l}</pre>`)};
+function render(){$("#tabs").innerHTML=Object.keys(P).map(t=>`<button class="${t===tab?"on":""}" onclick="tab='${t}';location.hash=encodeURIComponent(tab);render()">${t}</button>`).join("");
+  $("#chips").innerHTML=Object.entries(S).filter(([k,v])=>v&&!k.startsWith("__")).map(([,v])=>`<span class="chip">${esc(v)}</span>`).join("");
+  const t0=performance.now();CH.forEach(c=>c.dispose());CH=[];$("#main").innerHTML=P[tab]();AFTER.splice(0).forEach(f=>f());$("#meta").textContent=`Built ${D.meta.built} · ${D.meta.status.split("|").slice(0,2).join("·")} · ${Math.round(performance.now()-t0)} ms`}
+S.fy=defFY;buildBar();$("#bar").querySelector('[data-f="fy"]').value=defFY;render();
+</script>
+</body>
+</html>
