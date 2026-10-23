@@ -1,0 +1,53 @@
+name: Build demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas
+      - name: Generate synthetic data
+        run: python generate_fake_data.py
+      - name: Build dashboard
+        working-directory: src
+        run: python build_html.py
+      - name: Check the page has data
+        run: test "$(stat -c %s 'Breakdown Dashboard.html')" -gt 1000000
+      - name: Collect site
+        run: |
+          mkdir -p _site/docs _site/month-end
+          cp "Breakdown Dashboard.html" index.html _site/
+          cp docs/*.png _site/docs/
+          cp month-end/*.pdf _site/month-end/
+      - uses: actions/upload-pages-artifact@v3
+        if: vars.DEPLOY_PAGES == 'true'
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: vars.DEPLOY_PAGES == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

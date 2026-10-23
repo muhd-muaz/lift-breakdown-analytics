@@ -1,5 +1,7 @@
 # Lift breakdown analytics
 
+[![Build demo](https://github.com/muhd-muaz/lift-breakdown-analytics/actions/workflows/demo.yml/badge.svg)](https://github.com/muhd-muaz/lift-breakdown-analytics/actions/workflows/demo.yml)
+
 A daily reporting pipeline for a lift and escalator service business: breakdown callbacks, mantraps (passengers
 trapped), attend time against a 40-minute target, repeat calls, preventive maintenance (PM) completion and backlog.
 It turns raw ERP work orders and call-centre tickets into one offline HTML dashboard and two month-end PDF reports.
